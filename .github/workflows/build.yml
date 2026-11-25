@@ -1,4 +1,4 @@
-name: SND_MG_615
+name: build
 on: [workflow_dispatch]
 
 jobs:
@@ -13,13 +13,23 @@ jobs:
         with:
           ndk-version: r27c
 
-      - name: Bootstrap Tools & Fetch Mesa
+      - name: Install Modern Meson (>= 1.4) & Host Tools
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip python3-venv ninja-build python3-mako bison flex cmake glslang-tools zip unzip jq
+          pip install --break-system-packages --upgrade meson
+          meson --version
           chmod +x scripts/*.sh
           ./scripts/bootstrap-host-tools.sh
+
+      - name: Fetch Mesa & Apply G615 Patches
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
           ./scripts/fetch-mesa.sh
           ./scripts/apply-patches.sh --profile g615-v11-csf
 
