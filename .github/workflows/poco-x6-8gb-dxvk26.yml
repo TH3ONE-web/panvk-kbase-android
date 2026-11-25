@@ -1,1 +1,71 @@
+name: build
+on: [workflow_dispatch]
 
+jobs:
+  build-poco-x6-pro-8gb:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y meson ninja-build python3-mako bison flex cmake glslang-tools zip unzip jq
+
+      - name: Setup Android NDK r27c
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r27c
+
+      - name: Inject Dimensity 8300 Ultra & 8GB RAM Optimizations
+        run: |
+          chmod +x scripts/*.sh
+          find . -maxdepth 3 -type f \( -name "*.txt" -o -name "*.sh" -o -name "*.meson" \) -exec sed -i "s/-O2/-O3 -march=armv9-a+simd -mtune=cortex-a715 -flto=thin -DNDEBUG -fomit-frame-pointer/g" {} +
+          find scripts/ -type f -name "*.sh" -exec sed -i "s/meson setup/meson setup -Db_ndebug=true -Dcpp_rtti=false -Dshader-cache=enabled -Dshader-cache-default=true/g" {} +
+
+      - name: Run Repository Fetch, Patch & Build Scripts
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          ls -la scripts/
+          [ -f scripts/fetch-mesa.sh ] && ./scripts/fetch-mesa.sh
+          if [ -f scripts/apply-patches.sh ]; then
+            ./scripts/apply-patches.sh --profile g615-v11-csf || ./scripts/apply-patches.sh
+          fi
+          BUILD_SCRIPT=$(ls scripts/*build*.sh 2>/dev/null | head -n 1)
+          echo "Ejecutando script de compilacion: $BUILD_SCRIPT"
+          "$BUILD_SCRIPT" --profile g615-v11-csf || "$BUILD_SCRIPT"
+
+      - name: Strip & Package AdrenoTools/T6Requiem ZIP
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          mkdir -p out_driver
+          SO_FILE=$(find . -name "libvulkan_panfrost.so" -type f | head -n 1)
+          echo "Binario encontrado en: $SO_FILE"
+          ${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip --strip-unneeded "$SO_FILE" || true
+          cp "$SO_FILE" out_driver/libvulkan_panfrost.so
+          cat << 'EOF' > out_driver/meta.json
+          {
+            "schemaVersion": 1,
+            "name": "PanVK Poco X6 Pro 8GB MaxPerf (DXVK 2.6)",
+            "description": "Mesa PanVK Vulkan 1.3 optimizado para Mali-G615 MC6 y Dimensity 8300 Ultra (8GB RAM)",
+            "author": "TH3ONE-web",
+            "packageVersion": "1",
+            "vendor": "Mesa",
+            "driverVersion": "26.0-g615-maxperf",
+            "minApi": 31,
+            "libraryName": "libvulkan_panfrost.so"
+          }
+          EOF
+          cd out_driver && zip -r ../PanVK-PocoX6Pro-8GB-MaxPerf.zip libvulkan_panfrost.so meta.json
+
+      - name: Upload Ready-to-Use Driver ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: PanVK-PocoX6Pro-8GB-MaxPerf
+          path: PanVK-PocoX6Pro-8GB-MaxPerf.zip
