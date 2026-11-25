@@ -13,10 +13,10 @@ jobs:
         with:
           ndk-version: r27c
 
-      - name: Install Modern Meson (>= 1.4)
+      - name: Install Modern Meson & Mesa Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip python3-venv ninja-build python3-mako bison flex cmake glslang-tools zip unzip jq
+          sudo apt-get install -y python3-pip python3-venv ninja-build python3-mako python3-yaml python3-ply bison flex cmake glslang-tools zip unzip jq pkg-config libdrm-dev libelf-dev libexpat1-dev zlib1g-dev libzstd-dev
           pip install --break-system-packages --upgrade meson
           meson --version
 
