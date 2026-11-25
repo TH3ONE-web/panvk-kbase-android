@@ -13,10 +13,10 @@ jobs:
         with:
           ndk-version: r27c
 
-      - name: Install Modern Meson & Mesa Build Dependencies
+      - name: Install Modern Meson & Mesa Host Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip python3-venv ninja-build python3-mako python3-yaml python3-ply bison flex cmake glslang-tools zip unzip jq pkg-config libdrm-dev libelf-dev libexpat1-dev zlib1g-dev libzstd-dev
+          sudo apt-get install -y python3-pip python3-venv ninja-build python3-mako python3-yaml python3-ply bison flex cmake glslang-tools spirv-tools zip unzip jq pkg-config libdrm-dev libelf-dev libexpat1-dev zlib1g-dev libzstd-dev libclang-18-dev libllvmspirvlib-18-dev llvm-spirv-18
           pip install --break-system-packages --upgrade meson
           meson --version
 
