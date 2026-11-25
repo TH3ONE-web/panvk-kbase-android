@@ -16,7 +16,7 @@ jobs:
       - name: Install Modern Meson & All Mesa/Android Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip python3-venv ninja-build python3-mako python3-yaml python3-ply bison flex cmake glslang-tools spirv-tools zip unzip jq pkg-config libdrm-dev libelf-dev libexpat1-dev zlib1g-dev libzstd-dev libclang-18-dev libllvmspirvlib-18-dev llvm-spirv-18 libxcb1-dev libx11-dev libxshmfence-dev libxext-dev libxfixes-dev libxrandr-dev libxxf86vm-dev libwayland-dev wayland-protocols
+          sudo apt-get install -y python3-pip python3-venv ninja-build python3-mako python3-yaml python3-ply bison flex cmake glslang-tools spirv-tools zip unzip jq pkg-config libdrm-dev libelf-dev libexpat1-dev zlib1g-dev libzstd-dev libclang-18-dev libllvmspirvlib-18-dev llvm-spirv-18 x11proto-dev libx11-dev libx11-xcb-dev libxshmfence-dev libxext-dev libxfixes-dev libxrandr-dev libxxf86vm-dev libxcb1-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-glx0-dev libxcb-present-dev libxcb-randr0-dev libxcb-shm0-dev libxcb-sync-dev libxcb-xfixes0-dev libwayland-dev wayland-protocols
           pip install --break-system-packages --upgrade meson
           meson --version
 
