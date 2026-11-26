@@ -36,15 +36,31 @@ jobs:
           find . -maxdepth 3 -type f \( -name "*.txt" -o -name "*.sh" -o -name "*.meson" \) -exec sed -i "s/-O2/-O3 -march=armv9-a+simd -mtune=cortex-a715 -flto=thin -DNDEBUG -fomit-frame-pointer/g" {} +
           sed -i "s/meson setup/meson setup -Db_ndebug=true -Dcpp_rtti=false -Dshader-cache=enabled -Dshader-cache-default=true/g" scripts/build-android.sh
 
-      - name: Build Android Deps, PanVK G615 & BCn Layer
+      - name: Build Android Deps, PanVK G615 & Package ZIP
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
           ./scripts/build-android-deps.sh
           ./scripts/build-android.sh --profile g615-v11-csf
-          ./scripts/build-bcn-layer-android.sh || true
-          ./scripts/package-launcher-zips.sh || ./scripts/package-android-adpkg.sh
+          SO_PATH="dist/android-g615-v11-csf/libvulkan_panfrost.so"
+          ./scripts/package-android-adpkg.sh --so "$SO_PATH" --profile g615-v11-csf || true
+          mkdir -p out_driver
+          cp "$SO_PATH" out_driver/libvulkan_panfrost.so
+          cat << 'EOF' > out_driver/meta.json
+          {
+            "schemaVersion": 1,
+            "name": "PanVK Poco X6 Pro 8GB MaxPerf (DXVK 2.6)",
+            "description": "Mesa PanVK Vulkan 1.3 optimizado para Mali-G615 MC6 y Dimensity 8300 Ultra (8GB RAM)",
+            "author": "TH3ONE-web",
+            "packageVersion": "1",
+            "vendor": "Mesa",
+            "driverVersion": "26.0-g615-maxperf",
+            "minApi": 31,
+            "libraryName": "libvulkan_panfrost.so"
+          }
+          EOF
+          cd out_driver && zip -r ../dist/PanVK-PocoX6Pro-8GB-MaxPerf.zip libvulkan_panfrost.so meta.json
 
       - name: Upload Poco X6 Pro 8GB Driver
         uses: actions/upload-artifact@v4
