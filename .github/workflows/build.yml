@@ -29,6 +29,7 @@ jobs:
           ./scripts/fetch-mesa.sh
           ./scripts/bootstrap-host-tools.sh
           ./scripts/apply-patches.sh --profile g615-v11-csf
+          sed -i 's/gs_bo_pool/cs_bo_pool/g' work/mesa/src/panfrost/vulkan/panvk_cmd_pool.c
 
       - name: Inject Dimensity 8300 Ultra (Cortex-A715) & 8GB RAM Optimizations
         run: |
